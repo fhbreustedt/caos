@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Escala Profissional - BR</title>
+    <title>Sistema de Escala Profissional - IFRN</title>
     
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,27 +11,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        :root { --primary: #2563eb; --bg: #f1f5f9; --accent: #7c3aed; --csv: #065f46; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        :root { 
+            --primary: #2563eb; 
+            --bg: #f8f9fa; 
+            --accent: #7c3aed; 
+            --success: #22c55e;
+            --danger: #ef4444;
+            --text-dark: #1e293b;
+        }
         
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text-dark); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
         .full-width { grid-column: 1 / -1; }
+        
         label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; }
         input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
         
         .days-selector { display: flex; flex-wrap: wrap; gap: 8px; }
-        .day-chip { padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .day-chip { padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; background: white; }
         .day-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         .actions-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
+        
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; transition: all 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: #22c55e; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #64748b; color: white; }
-        .btn-csv { background: var(--csv); color: white; }
         .btn-pdf { background: #1e293b; color: white; }
 
         .batch-panel { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none; align-items: center; gap: 15px; }
@@ -39,6 +48,7 @@
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
         .tab-btn { padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: bold; color: #64748b; }
         .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -2px; }
+        
         .view-content { display: none; }
         .view-content.active { display: block; }
 
@@ -46,7 +56,7 @@
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
         .color-badge { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         
-        #calendar { min-height: 700px; padding: 10px; }
+        #calendar { min-height: 700px; padding: 10px; background: white; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -76,7 +86,7 @@
             <div><label>Hora Fim</label><input type="time" id="timeEnd"></div>
             <div><label>Data Início</label><input type="date" id="dateStart"></div>
             <div><label>Data Fim</label><input type="date" id="dateEnd"></div>
-            <div><label>Cor</label><input type="color" id="userColor" value="#2563eb" style="height: 42px;"></div>
+            <div><label>Cor</label><input type="color" id="userColor" value="#2563eb" style="height: 42px; padding: 2px;"></div>
         </div>
         <div style="margin-top: 20px; display: flex; gap: 10px;">
             <button class="btn btn-primary" onclick="saveData()" id="btnSave">Salvar na Escala</button>
@@ -84,23 +94,24 @@
         </div>
     </div>
 
-    <div id="batchPanel" class="batch-panel">
-        <strong>Ações em Lote (<span id="selectedCount">0</span>):</strong>
-        <input type="color" id="batchColorPicker" value="#7c3aed" style="width: 40px; height: 35px; border:none;">
-        <button class="btn btn-primary" onclick="applyBatchColor()">Aplicar Cor</button>
-        <button class="btn btn-danger" onclick="deleteBatch()">Excluir Selecionados</button>
+    <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="downloadCSVTemplate()">📑 Modelo CSV</button>
+        
+        <button class="btn btn-primary" onclick="document.getElementById('unifiedImportInput').click()">📥 Importar</button>
+        
+        <button class="btn btn-success" onclick="exportData()">📤 Exportar</button>
+
+        <button class="btn btn-pdf" onclick="exportPDFCompleto()">📄 Gerar PDF Completo</button>
+        <button class="btn btn-danger" onclick="resetAll()" style="margin-left: auto;">⚠️ Zerar Escala</button>
+        
+        <input type="file" id="unifiedImportInput" style="display:none" accept=".json,.csv" onchange="handleImport(event)">
     </div>
 
-    <div class="actions-bar">
-        <button class="btn btn-success" onclick="exportJSON()">📤 JSON</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 Importar JSON</button>
-        <button class="btn btn-csv" onclick="exportCSV()">📊 CSV</button>
-        <button class="btn btn-csv" onclick="document.getElementById('importCSVFile').click()">📥 Importar CSV</button>
-        <button class="btn btn-secondary" onclick="downloadCSVTemplate()">📑 Modelo CSV</button>
-        <button class="btn btn-pdf" onclick="exportPDFCompleto()">📄 Gerar PDF Completo</button>
-        
-        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
-        <input type="file" id="importCSVFile" style="display:none" accept=".csv" onchange="importCSV(event)">
+    <div id="batchPanel" class="batch-panel">
+        <strong>Ações em Lote (<span id="selectedCount">0</span>):</strong>
+        <input type="color" id="batchColorPicker" value="#7c3aed" style="width: 40px; height: 35px; border:none; cursor:pointer;">
+        <button class="btn btn-primary" onclick="applyBatchColor()">Aplicar Cor</button>
+        <button class="btn btn-danger" onclick="deleteBatch()">Excluir Selecionados</button>
     </div>
 
     <div class="tabs">
@@ -109,7 +120,7 @@
     </div>
 
     <div id="tab-calendar" class="view-content active">
-        <div class="card" id="capture-calendar">
+        <div class="card" id="capture-calendar" style="padding: 10px;">
             <div id="calendar"></div>
         </div>
     </div>
@@ -138,18 +149,17 @@
     let calendar;
     const diasSemanaMapa = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-    // Função auxiliar para formatar data ISO (aaaa-mm-dd) para BR (dd/mm/aaaa)
+    // Formatação
     function dataParaBR(dataISO) {
         if(!dataISO) return "";
         const [ano, mes, dia] = dataISO.split('-');
         return `${dia}/${mes}/${ano}`;
     }
 
-    // Função auxiliar para formatar data BR (dd/mm/aaaa) para ISO (aaaa-mm-dd)
     function dataParaISO(dataBR) {
         if(!dataBR) return "";
-        const [dia, mes, ano] = dataBR.split('/');
-        return `${ano}-${mes}-${dia}`;
+        const parts = dataBR.split('/');
+        return (parts.length === 3) ? `${parts[2]}-${parts[1]}-${parts[0]}` : "";
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -163,7 +173,7 @@
             headerToolbar: { 
                 left: 'prev,next today', 
                 center: 'title', 
-                right: 'dayGridYear,dayGridMonth,timeGridWeek,timeGridDay' 
+                right: 'dayGridMonth,timeGridWeek,timeGridDay' 
             },
             eventClick: (info) => editEntry(info.event.extendedProps.dataIndex),
             eventTextColor: '#ffffff'
@@ -171,6 +181,74 @@
         calendar.render();
         loadLocalData();
     });
+
+    // --- LÓGICA DE IMPORTAÇÃO UNIFICADA ---
+    function handleImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const extension = file.name.split('.').pop().toLowerCase();
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            if (extension === 'json') {
+                processJSON(e.target.result);
+            } else if (extension === 'csv') {
+                processCSV(e.target.result);
+            } else {
+                alert("Formato inválido! Por favor, selecione um arquivo .json ou .csv.");
+            }
+            event.target.value = ''; // Limpa o input para permitir re-importar o mesmo arquivo
+        };
+
+        reader.readAsText(file);
+    }
+
+    function processJSON(content) {
+        try {
+            const data = JSON.parse(content);
+            scheduleData = [...scheduleData, ...data];
+            renderAll(); saveLocalData();
+        } catch(err) { alert("Erro ao processar o arquivo JSON."); }
+    }
+
+    function processCSV(content) {
+        const lines = content.split('\n');
+        const imported = [];
+        try {
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const cols = lines[i].split(';');
+                const dias = cols[1].split(',').map(n => diasSemanaMapa.indexOf(n.trim())).filter(n => n !== -1);
+                imported.push({
+                    name: cols[0], days: dias, timeStart: cols[2], timeEnd: cols[3],
+                    dateStart: dataParaISO(cols[4]), dateEnd: dataParaISO(cols[5]), 
+                    color: cols[6]?.trim() || "#2563eb"
+                });
+            }
+            scheduleData = [...scheduleData, ...imported];
+            renderAll(); saveLocalData();
+        } catch(err) { alert("Erro ao processar o arquivo CSV. Verifique o modelo."); }
+    }
+
+    // --- LÓGICA DE EXPORTAÇÃO UNIFICADA ---
+    function exportData() {
+        // Exporta JSON por padrão
+        const blob = new Blob([JSON.stringify(scheduleData, null, 2)], {type : 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `escala_export.json`;
+        a.click();
+    }
+
+    // --- CRUD E INTERFACE ---
+    function resetAll() {
+        if (confirm("Deseja ZERAR toda a escala? Esta ação não pode ser desfeita.")) {
+            scheduleData = [];
+            localStorage.removeItem('escala_v2026');
+            renderAll(); clearForm();
+        }
+    }
 
     function saveData() {
         const index = parseInt(document.getElementById('editIndex').value);
@@ -191,9 +269,7 @@
         if (index > -1) scheduleData[index] = entry;
         else scheduleData.push(entry);
 
-        renderAll();
-        clearForm();
-        saveLocalData();
+        renderAll(); clearForm(); saveLocalData();
     }
 
     function renderAll() {
@@ -204,15 +280,9 @@
 
         scheduleData.forEach((item, idx) => {
             calendar.addEvent({
-                title: item.name,
-                daysOfWeek: item.days,
-                startTime: item.timeStart,
-                endTime: item.timeEnd,
-                startRecur: item.dateStart,
-                endRecur: item.dateEnd,
-                backgroundColor: item.color,
-                borderColor: item.color,
-                extendedProps: { dataIndex: idx }
+                title: item.name, daysOfWeek: item.days, startTime: item.timeStart, endTime: item.timeEnd,
+                startRecur: item.dateStart, endRecur: item.dateEnd, backgroundColor: item.color,
+                borderColor: item.color, extendedProps: { dataIndex: idx }
             });
 
             const row = tbody.insertRow();
@@ -227,108 +297,29 @@
         });
     }
 
-    async function exportPDFCompleto() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = doc.internal.pageSize.getWidth();
-        
-        doc.setFontSize(16);
-        doc.text("Relatório Geral de Escala", 14, 15);
-        
-        const canvas = await html2canvas(document.getElementById('capture-calendar'), { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const imgHeight = (canvas.height * (pdfWidth - 28)) / canvas.width;
-
-        doc.addImage(imgData, 'PNG', 14, 25, pdfWidth - 28, imgHeight);
-
-        const tableRows = scheduleData.map(i => [
-            i.name, i.days.map(d => diasSemanaMapa[d]).join(','), 
-            `${i.timeStart}-${i.timeEnd}`, `${dataParaBR(i.dateStart)} a ${dataParaBR(i.dateEnd)}`
-        ]);
-
-        doc.autoTable({
-            head: [['Nome', 'Dias', 'Horário', 'Vigência']],
-            body: tableRows,
-            startY: imgHeight + 35,
-            theme: 'grid',
-            headStyles: { fillColor: [37, 99, 235] }
-        });
-
-        doc.save('escala_completa.pdf');
-    }
-
     function downloadCSVTemplate() {
         const csvContent = "\ufeffNome;Dias;Hora Inicio;Hora Fim;Data Inicio;Data Fim;Cor\nExemplo;Seg,Qua,Sex;08:00;12:00;01/04/2026;31/12/2026;#2563eb";
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "modelo_escala.csv";
-        link.click();
+        link.download = "modelo.csv"; link.click();
     }
 
-    function exportCSV() {
-        let csv = "\ufeffNome;Dias;Hora Inicio;Hora Fim;Data Inicio;Data Fim;Cor\n";
-        scheduleData.forEach(i => {
-            csv += `${i.name};${i.days.map(d => diasSemanaMapa[d]).join(',')};${i.timeStart};${i.timeEnd};${dataParaBR(i.dateStart)};${dataParaBR(i.dateEnd)};${i.color}\n`;
+    async function exportPDFCompleto() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        doc.setFontSize(16); doc.text("Escala de Atividades", 14, 15);
+        const canvas = await html2canvas(document.getElementById('capture-calendar'), { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * (pdfWidth - 28)) / canvas.width;
+        doc.addImage(imgData, 'PNG', 14, 25, pdfWidth - 28, imgHeight);
+        doc.autoTable({
+            head: [['Nome', 'Dias', 'Horário', 'Vigência']],
+            body: scheduleData.map(i => [i.name, i.days.map(d => diasSemanaMapa[d]).join(','), `${i.timeStart}-${i.timeEnd}`, `${dataParaBR(i.dateStart)} a ${dataParaBR(i.dateEnd)}`]),
+            startY: imgHeight + 35, theme: 'grid'
         });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "escala.csv";
-        link.click();
-    }
-
-    function importCSV(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const lines = e.target.result.split('\n');
-            const imported = [];
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const cols = lines[i].split(';');
-                const dias = cols[1].split(',').map(n => diasSemanaMapa.indexOf(n.trim())).filter(n => n !== -1);
-                imported.push({
-                    name: cols[0], 
-                    days: dias, 
-                    timeStart: cols[2], 
-                    timeEnd: cols[3],
-                    dateStart: dataParaISO(cols[4]), 
-                    dateEnd: dataParaISO(cols[5]), 
-                    color: cols[6]?.trim() || "#2563eb"
-                });
-            }
-            scheduleData = [...scheduleData, ...imported];
-            renderAll(); saveLocalData();
-        };
-        reader.readAsText(file);
-    }
-
-    function toggleAllCheckboxes(source) {
-        document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = source.checked);
-        updateBatchUI();
-    }
-
-    function updateBatchUI() {
-        const sel = document.querySelectorAll('.row-checkbox:checked');
-        document.getElementById('batchPanel').style.display = sel.length > 0 ? 'flex' : 'none';
-        document.getElementById('selectedCount').innerText = sel.length;
-    }
-
-    function applyBatchColor() {
-        const color = document.getElementById('batchColorPicker').value;
-        document.querySelectorAll('.row-checkbox:checked').forEach(cb => {
-            scheduleData[cb.dataset.index].color = color;
-        });
-        renderAll(); saveLocalData();
-    }
-
-    function deleteBatch() {
-        if (!confirm("Excluir selecionados?")) return;
-        const indices = Array.from(document.querySelectorAll('.row-checkbox:checked'))
-                             .map(cb => parseInt(cb.dataset.index)).sort((a,b) => b-a);
-        indices.forEach(idx => scheduleData.splice(idx, 1));
-        renderAll(); saveLocalData();
+        doc.save('escala.pdf');
     }
 
     function editEntry(index) {
@@ -366,27 +357,36 @@
         if(tabId === 'tab-calendar') setTimeout(() => calendar.render(), 10);
     }
 
-    function saveLocalData() { localStorage.setItem('escala_master_v7', JSON.stringify(scheduleData)); }
+    function toggleAllCheckboxes(source) {
+        document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = source.checked);
+        updateBatchUI();
+    }
+
+    function updateBatchUI() {
+        const sel = document.querySelectorAll('.row-checkbox:checked');
+        document.getElementById('batchPanel').style.display = sel.length > 0 ? 'flex' : 'none';
+        document.getElementById('selectedCount').innerText = sel.length;
+    }
+
+    function applyBatchColor() {
+        const color = document.getElementById('batchColorPicker').value;
+        document.querySelectorAll('.row-checkbox:checked').forEach(cb => {
+            scheduleData[cb.dataset.index].color = color;
+        });
+        renderAll(); saveLocalData();
+    }
+
+    function deleteBatch() {
+        if (!confirm("Excluir selecionados?")) return;
+        const indices = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b-a);
+        indices.forEach(idx => scheduleData.splice(idx, 1));
+        renderAll(); saveLocalData();
+    }
+
+    function saveLocalData() { localStorage.setItem('escala_v2026', JSON.stringify(scheduleData)); }
     function loadLocalData() {
-        const raw = localStorage.getItem('escala_master_v7');
+        const raw = localStorage.getItem('escala_v2026');
         if(raw) { scheduleData = JSON.parse(raw); renderAll(); }
-    }
-
-    function exportJSON() {
-        const blob = new Blob([JSON.stringify(scheduleData, null, 2)], {type : 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `escala.json`; a.click();
-    }
-
-    function importJSON(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            scheduleData = JSON.parse(e.target.result);
-            renderAll(); saveLocalData();
-        };
-        reader.readAsText(file);
     }
 
     document.querySelectorAll('.day-chip').forEach(chip => {
