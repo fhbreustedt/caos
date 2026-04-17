@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Escala Profissional - BR</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root { --primary: #2563eb; --bg: #f1f5f9; --accent: #7c3aed; --csv: #065f46; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .full-width { grid-column: 1 / -1; }
+        label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        
+        .days-selector { display: flex; flex-wrap: wrap; gap: 8px; }
+        .day-chip { padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .day-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .actions-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: #22c55e; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-secondary { background: #64748b; color: white; }
+        .btn-csv { background: var(--csv); color: white; }
+        .btn-pdf { background: #1e293b; color: white; }
+
+        .batch-panel { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none; align-items: center; gap: 15px; }
+
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; }
+        .tab-btn { padding: 12px 24px; border: none; background: none; cursor: pointer; font-weight: bold; color: #64748b; }
+        .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -2px; }
+        .view-content { display: none; }
+        .view-content.active { display: block; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        .color-badge { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        
+        #calendar { min-height: 700px; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2 id="formTitle">📝 Gestão de Escala Profissional</h2>
+        <input type="hidden" id="editIndex" value="-1">
+        <div class="form-grid">
+            <div class="full-width">
+                <label>Nome do Colaborador / Atividade</label>
+                <input type="text" id="userName" placeholder="Ex: Técnico de TI">
+            </div>
+            <div class="full-width">
+                <label>Dias da Semana</label>
+                <div class="days-selector">
+                    <span class="day-chip" data-value="1">Seg</span>
+                    <span class="day-chip" data-value="2">Ter</span>
+                    <span class="day-chip" data-value="3">Qua</span>
+                    <span class="day-chip" data-value="4">Qui</span>
+                    <span class="day-chip" data-value="5">Sex</span>
+                    <span class="day-chip" data-value="6">Sáb</span>
+                    <span class="day-chip" data-value="0">Dom</span>
+                </div>
+            </div>
+            <div><label>Hora Início</label><input type="time" id="timeStart"></div>
+            <div><label>Hora Fim</label><input type="time" id="timeEnd"></div>
+            <div><label>Data Início</label><input type="date" id="dateStart"></div>
+            <div><label>Data Fim</label><input type="date" id="dateEnd"></div>
+            <div><label>Cor</label><input type="color" id="userColor" value="#2563eb" style="height: 42px;"></div>
+        </div>
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <button class="btn btn-primary" onclick="saveData()" id="btnSave">Salvar na Escala</button>
+            <button class="btn btn-secondary" onclick="clearForm()" id="btnCancel" style="display:none;">Cancelar Edição</button>
+        </div>
+    </div>
+
+    <div id="batchPanel" class="batch-panel">
+        <strong>Ações em Lote (<span id="selectedCount">0</span>):</strong>
+        <input type="color" id="batchColorPicker" value="#7c3aed" style="width: 40px; height: 35px; border:none;">
+        <button class="btn btn-primary" onclick="applyBatchColor()">Aplicar Cor</button>
+        <button class="btn btn-danger" onclick="deleteBatch()">Excluir Selecionados</button>
+    </div>
+
+    <div class="actions-bar">
+        <button class="btn btn-success" onclick="exportJSON()">📤 JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 Importar JSON</button>
+        <button class="btn btn-csv" onclick="exportCSV()">📊 CSV</button>
+        <button class="btn btn-csv" onclick="document.getElementById('importCSVFile').click()">📥 Importar CSV</button>
+        <button class="btn btn-secondary" onclick="downloadCSVTemplate()">📑 Modelo CSV</button>
+        <button class="btn btn-pdf" onclick="exportPDFCompleto()">📄 Gerar PDF Completo</button>
+        
+        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
+        <input type="file" id="importCSVFile" style="display:none" accept=".csv" onchange="importCSV(event)">
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-calendar', this)">📅 Calendário</button>
+        <button class="tab-btn" onclick="switchTab('tab-table', this)">📊 Lista / Lote</button>
+    </div>
+
+    <div id="tab-calendar" class="view-content active">
+        <div class="card" id="capture-calendar">
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <div id="tab-table" class="view-content">
+        <div class="card">
+            <table id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleAllCheckboxes(this)"></th>
+                        <th>Nome</th>
+                        <th>Dias</th>
+                        <th>Horário</th>
+                        <th>Vigência</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let scheduleData = [];
+    let calendar;
+    const diasSemanaMapa = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+    // Função auxiliar para formatar data ISO (aaaa-mm-dd) para BR (dd/mm/aaaa)
+    function dataParaBR(dataISO) {
+        if(!dataISO) return "";
+        const [ano, mes, dia] = dataISO.split('-');
+        return `${dia}/${mes}/${ano}`;
+    }
+
+    // Função auxiliar para formatar data BR (dd/mm/aaaa) para ISO (aaaa-mm-dd)
+    function dataParaISO(dataBR) {
+        if(!dataBR) return "";
+        const [dia, mes, ano] = dataBR.split('/');
+        return `${ano}-${mes}-${dia}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            locale: 'pt-br',
+            slotMinTime: "06:00:00",
+            slotMaxTime: "22:00:00",
+            allDaySlot: false,
+            headerToolbar: { 
+                left: 'prev,next today', 
+                center: 'title', 
+                right: 'dayGridYear,dayGridMonth,timeGridWeek,timeGridDay' 
+            },
+            eventClick: (info) => editEntry(info.event.extendedProps.dataIndex),
+            eventTextColor: '#ffffff'
+        });
+        calendar.render();
+        loadLocalData();
+    });
+
+    function saveData() {
+        const index = parseInt(document.getElementById('editIndex').value);
+        const entry = {
+            name: document.getElementById('userName').value,
+            timeStart: document.getElementById('timeStart').value,
+            timeEnd: document.getElementById('timeEnd').value,
+            dateStart: document.getElementById('dateStart').value,
+            dateEnd: document.getElementById('dateEnd').value,
+            color: document.getElementById('userColor').value,
+            days: Array.from(document.querySelectorAll('.day-chip.active')).map(c => parseInt(c.dataset.value))
+        };
+
+        if (!entry.name || entry.days.length === 0 || !entry.timeStart || !entry.dateStart) {
+            alert("Preencha os campos obrigatórios."); return;
+        }
+
+        if (index > -1) scheduleData[index] = entry;
+        else scheduleData.push(entry);
+
+        renderAll();
+        clearForm();
+        saveLocalData();
+    }
+
+    function renderAll() {
+        calendar.removeAllEvents();
+        const tbody = document.querySelector('#scheduleTable tbody');
+        tbody.innerHTML = '';
+        document.getElementById('batchPanel').style.display = 'none';
+
+        scheduleData.forEach((item, idx) => {
+            calendar.addEvent({
+                title: item.name,
+                daysOfWeek: item.days,
+                startTime: item.timeStart,
+                endTime: item.timeEnd,
+                startRecur: item.dateStart,
+                endRecur: item.dateEnd,
+                backgroundColor: item.color,
+                borderColor: item.color,
+                extendedProps: { dataIndex: idx }
+            });
+
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><input type="checkbox" class="row-checkbox" data-index="${idx}" onclick="updateBatchUI()"></td>
+                <td><span class="color-badge" style="background:${item.color}"></span><strong>${item.name}</strong></td>
+                <td>${item.days.map(d => diasSemanaMapa[d]).join(', ')}</td>
+                <td>${item.timeStart} - ${item.timeEnd}</td>
+                <td>${dataParaBR(item.dateStart)} a ${dataParaBR(item.dateEnd)}</td>
+                <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:10px" onclick="editEntry(${idx})">Editar</button></td>
+            `;
+        });
+    }
+
+    async function exportPDFCompleto() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = doc.internal.pageSize.getWidth();
+        
+        doc.setFontSize(16);
+        doc.text("Relatório Geral de Escala", 14, 15);
+        
+        const canvas = await html2canvas(document.getElementById('capture-calendar'), { scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * (pdfWidth - 28)) / canvas.width;
+
+        doc.addImage(imgData, 'PNG', 14, 25, pdfWidth - 28, imgHeight);
+
+        const tableRows = scheduleData.map(i => [
+            i.name, i.days.map(d => diasSemanaMapa[d]).join(','), 
+            `${i.timeStart}-${i.timeEnd}`, `${dataParaBR(i.dateStart)} a ${dataParaBR(i.dateEnd)}`
+        ]);
+
+        doc.autoTable({
+            head: [['Nome', 'Dias', 'Horário', 'Vigência']],
+            body: tableRows,
+            startY: imgHeight + 35,
+            theme: 'grid',
+            headStyles: { fillColor: [37, 99, 235] }
+        });
+
+        doc.save('escala_completa.pdf');
+    }
+
+    function downloadCSVTemplate() {
+        const csvContent = "\ufeffNome;Dias;Hora Inicio;Hora Fim;Data Inicio;Data Fim;Cor\nExemplo;Seg,Qua,Sex;08:00;12:00;01/04/2026;31/12/2026;#2563eb";
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "modelo_escala.csv";
+        link.click();
+    }
+
+    function exportCSV() {
+        let csv = "\ufeffNome;Dias;Hora Inicio;Hora Fim;Data Inicio;Data Fim;Cor\n";
+        scheduleData.forEach(i => {
+            csv += `${i.name};${i.days.map(d => diasSemanaMapa[d]).join(',')};${i.timeStart};${i.timeEnd};${dataParaBR(i.dateStart)};${dataParaBR(i.dateEnd)};${i.color}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "escala.csv";
+        link.click();
+    }
+
+    function importCSV(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const lines = e.target.result.split('\n');
+            const imported = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const cols = lines[i].split(';');
+                const dias = cols[1].split(',').map(n => diasSemanaMapa.indexOf(n.trim())).filter(n => n !== -1);
+                imported.push({
+                    name: cols[0], 
+                    days: dias, 
+                    timeStart: cols[2], 
+                    timeEnd: cols[3],
+                    dateStart: dataParaISO(cols[4]), 
+                    dateEnd: dataParaISO(cols[5]), 
+                    color: cols[6]?.trim() || "#2563eb"
+                });
+            }
+            scheduleData = [...scheduleData, ...imported];
+            renderAll(); saveLocalData();
+        };
+        reader.readAsText(file);
+    }
+
+    function toggleAllCheckboxes(source) {
+        document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = source.checked);
+        updateBatchUI();
+    }
+
+    function updateBatchUI() {
+        const sel = document.querySelectorAll('.row-checkbox:checked');
+        document.getElementById('batchPanel').style.display = sel.length > 0 ? 'flex' : 'none';
+        document.getElementById('selectedCount').innerText = sel.length;
+    }
+
+    function applyBatchColor() {
+        const color = document.getElementById('batchColorPicker').value;
+        document.querySelectorAll('.row-checkbox:checked').forEach(cb => {
+            scheduleData[cb.dataset.index].color = color;
+        });
+        renderAll(); saveLocalData();
+    }
+
+    function deleteBatch() {
+        if (!confirm("Excluir selecionados?")) return;
+        const indices = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+                             .map(cb => parseInt(cb.dataset.index)).sort((a,b) => b-a);
+        indices.forEach(idx => scheduleData.splice(idx, 1));
+        renderAll(); saveLocalData();
+    }
+
+    function editEntry(index) {
+        const item = scheduleData[index];
+        document.getElementById('userName').value = item.name;
+        document.getElementById('timeStart').value = item.timeStart;
+        document.getElementById('timeEnd').value = item.timeEnd;
+        document.getElementById('dateStart').value = item.dateStart;
+        document.getElementById('dateEnd').value = item.dateEnd;
+        document.getElementById('userColor').value = item.color;
+        document.getElementById('editIndex').value = index;
+        document.querySelectorAll('.day-chip').forEach(chip => {
+            chip.classList.toggle('active', item.days.includes(parseInt(chip.dataset.value)));
+        });
+        document.getElementById('formTitle').innerText = "✏️ Editando...";
+        document.getElementById('btnSave').innerText = "Atualizar Item";
+        document.getElementById('btnCancel').style.display = "inline-block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearForm() {
+        document.getElementById('editIndex').value = "-1";
+        document.getElementById('userName').value = '';
+        document.querySelectorAll('.day-chip').forEach(c => c.classList.remove('active'));
+        document.getElementById('formTitle').innerText = "📝 Gestão de Escala";
+        document.getElementById('btnSave').innerText = "Salvar na Escala";
+        document.getElementById('btnCancel').style.display = "none";
+    }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+        if(tabId === 'tab-calendar') setTimeout(() => calendar.render(), 10);
+    }
+
+    function saveLocalData() { localStorage.setItem('escala_master_v7', JSON.stringify(scheduleData)); }
+    function loadLocalData() {
+        const raw = localStorage.getItem('escala_master_v7');
+        if(raw) { scheduleData = JSON.parse(raw); renderAll(); }
+    }
+
+    function exportJSON() {
+        const blob = new Blob([JSON.stringify(scheduleData, null, 2)], {type : 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `escala.json`; a.click();
+    }
+
+    function importJSON(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            scheduleData = JSON.parse(e.target.result);
+            renderAll(); saveLocalData();
+        };
+        reader.readAsText(file);
+    }
+
+    document.querySelectorAll('.day-chip').forEach(chip => {
+        chip.addEventListener('click', () => chip.classList.toggle('active'));
+    });
+</script>
+
+</body>
+</html>
