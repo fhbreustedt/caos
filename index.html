@@ -3,24 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Repositório de Ferramentas</title>
+    <title>Hub de Artefatos — Minimal</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,300,0,0" />
+    
     <style>
-        body { font-family: sans-serif; background: #f4f4f9; padding: 40px; text-align: center; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        ul { list-style: none; padding: 0; }
-        li { margin: 15px 0; }
-        a { text-decoration: none; color: #2563eb; font-weight: bold; font-size: 1.2rem; }
-        a:hover { color: #1e40af; }
+        :root {
+            --bg: #fdfdfd;
+            --card-bg: #ffffff;
+            --text-title: #2d3436;
+            --text-body: #636e72;
+            /* Cores Pastel */
+            --pastel-blue: #d6e4ff;
+            --pastel-green: #d1f2eb;
+            --pastel-purple: #ede7f6;
+            --radius: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: var(--text-body);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            color: var(--text-title);
+            font-weight: 300;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #f0f0f0;
+            border-radius: var(--radius);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: #e0e0e0;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.04);
+        }
+
+        /* Container do Ícone */
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .icon-box {
+            transform: scale(1.1);
+        }
+
+        .icon-box span {
+            font-size: 40px;
+            color: rgba(0,0,0,0.5);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            color: var(--text-title);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .card p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* Cores específicas para cada card */
+        .bg-blue { background-color: var(--pastel-blue); }
+        .bg-green { background-color: var(--pastel-green); }
+        .bg-purple { background-color: var(--pastel-purple); }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🛠 Meus Projetos Estáticos</h1>
-        <p>Acesse abaixo as ferramentas desenvolvidas:</p>
-        <hr>
-        <ul>
-            <li><a href="escala.html">📅 Gestor de Escalas</a></li>
-        </ul>
-    </div>
+
+    <header>
+        <h1>Meus Artefatos</h1>
+    </header>
+
+    <main class="grid">
+        
+        <a href="escala.html" class="card">
+            <div class="icon-box bg-blue">
+                <span class="material-symbols-rounded">calendar_month</span>
+            </div>
+            <h2>Escala Individual</h2>
+            <p>Horários e turnos organizados de forma visual.</p>
+        </a>
+<!--
+        <a href="#" class="card">
+            <div class="icon-box bg-green">
+                <span class="material-symbols-rounded">monitoring</span>
+            </div>
+            <h2>Monitoramento</h2>
+            <p>Visualização de dados e métricas do sistema.</p>
+        </a>
+
+        <a href="#" class="card">
+            <div class="icon-box bg-purple">
+                <span class="material-symbols-rounded">description</span>
+            </div>
+            <h2>Documentos</h2>
+            <p>Repositório de templates e guias institucionais.</p>
+        </a>
+-->
+    </main>
+
 </body>
 </html>
